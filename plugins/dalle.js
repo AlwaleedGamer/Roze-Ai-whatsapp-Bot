@@ -1,4 +1,5 @@
 import fetch from 'node-fetch';
+import axios from 'axios';
 
 let handler = async (m, { conn, text, usedPrefix, command }) => {
   if (!text) throw `*هذا الأمر خاص بتوليد الصور باستعمال الذكاء الإصطناعي*\n\n*مثال*\n*${usedPrefix + command} girl and yellow cat*`;
@@ -6,21 +7,31 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
   try {
     m.reply('*الرجاء الانتظار، جاري إنشاء الصور...*');
 
-    const endpoint = `https://cute-tan-gorilla-yoke.cyclic.app/imagine?text=${encodeURIComponent(text)}`;
-    const response = await fetch(endpoint);
+    // فحص الكلمات السيئة
+    const profanityCheckURL = `https://profanity-checker.vercel.app/profane?t=${encodeURIComponent(text)}`;
+    const profanityCheckResult = await axios.get(profanityCheckURL);
 
-    if (response.ok) {
-      const imageBuffer = await response.buffer();
-      await conn.sendFile(m.chat, imageBuffer, 'image.png', null, m);
+    if (profanityCheckResult.data.isProfane) {
+      m.reply('لالالااا كلمة سيئة');
     } else {
-      throw '*فشل إنشاء الصورة*';
+      // توليد الصورة باستخدام الـ API الجديد
+      const imageGenerationURL = `https://ts-ai-api-shuddho.onrender.com/api/animagine?prompt=${encodeURIComponent(text)}`;
+      const response = await axios.get(imageGenerationURL, { responseType: 'arraybuffer' });
+
+      if (response.status === 200) {
+        const imageBuffer = Buffer.from(response.data, 'binary');
+        await conn.sendFile(m.chat, imageBuffer, 'image.png', `✅ تم تخيل الصورة بنجاح\n\nالوصف: ${text}`, m);
+      } else {
+        throw '*فشل إنشاء الصورة*';
+      }
     }
-  } catch {
+  } catch (error) {
+    console.error(error);
     throw '*أُووبس! حدث خطأ ما أثناء إنشاء الصور. الرجاء معاودة المحاولة في وقت لاحق.*';
   }
 };
 
-handler.help = ['dalle'];
+handler.help = ['xl'];
 handler.tags = ['drawing'];
-handler.command = ['dalle'];
+handler.command = ['xl']; // تغيير اسم الأمر إلى 'xl'
 export default handler;
