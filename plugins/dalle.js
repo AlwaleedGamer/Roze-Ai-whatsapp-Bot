@@ -7,23 +7,15 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
   try {
     m.reply('*الرجاء الانتظار، جاري إنشاء الصور...*');
 
-    // فحص الكلمات السيئة
-    const profanityCheckURL = `https://profanity-checker.vercel.app/profane?t=${encodeURIComponent(text)}`;
-    const profanityCheckResult = await axios.get(profanityCheckURL);
+    // توليد الصورة باستخدام الـ API الجديد
+    const imageGenerationURL = `https://ts-ai-api-shuddho.onrender.com/api/animagine?prompt=${encodeURIComponent(text)}`;
+    const response = await axios.get(imageGenerationURL, { responseType: 'arraybuffer' });
 
-    if (profanityCheckResult.data.isProfane) {
-      m.reply('لالالااا كلمة سيئة');
+    if (response.status === 200) {
+      const imageBuffer = Buffer.from(response.data, 'binary');
+      await conn.sendFile(m.chat, imageBuffer, 'image.png', `✅ تم تخيل الصورة بنجاح\n\nالوصف: ${text}`, m);
     } else {
-      // توليد الصورة باستخدام الـ API الجديد
-      const imageGenerationURL = `https://ts-ai-api-shuddho.onrender.com/api/animagine?prompt=${encodeURIComponent(text)}`;
-      const response = await axios.get(imageGenerationURL, { responseType: 'arraybuffer' });
-
-      if (response.status === 200) {
-        const imageBuffer = Buffer.from(response.data, 'binary');
-        await conn.sendFile(m.chat, imageBuffer, 'image.png', `✅ تم تخيل الصورة بنجاح\n\nالوصف: ${text}`, m);
-      } else {
-        throw '*فشل إنشاء الصورة*';
-      }
+      throw '*فشل إنشاء الصورة*';
     }
   } catch (error) {
     console.error(error);
