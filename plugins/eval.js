@@ -7,6 +7,7 @@ const client = new Client();
 
 client.on('qr', (qr) => {
   qrcode.generate(qr, { small: true });
+  console.log('QR code received, scan please!');
 });
 
 client.on('ready', () => {
@@ -14,10 +15,11 @@ client.on('ready', () => {
 });
 
 // معرف المستخدم المسموح له باستخدام الأمر
-const allowedID = '249967264949';
+const allowedID = '249967264949@s.whatsapp.net'; // تأكد من استخدام معرف الواتساب الصحيح
 
 // إعداد الأمر 'eval'
 client.on('message', async (message) => {
+  console.log(`Received message: ${message.body} from ${message.from}`);
   if (message.body.startsWith('!eval ')) {
     if (message.from !== allowedID) {
       message.reply('❌ لا تملك الصلاحيات لاستخدام هذا الأمر.');
@@ -66,6 +68,7 @@ client.on('message', async (message) => {
         }
       })()`;
 
+      console.log(`Executing command: ${cmd}`);
       eval(cmd);
     } catch (err) {
       console.log(err);
