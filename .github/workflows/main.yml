@@ -1,0 +1,17 @@
+name: Unzip plugins.zip
+
+on:
+  push:
+    paths:
+      - plugins.zip
+
+jobs:
+  unzip:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Unzip plugins.zip
+      run: unzip plugins.zip -d .
