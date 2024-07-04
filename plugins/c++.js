@@ -1,14 +1,14 @@
 import axios from 'axios';
 
 let handler = async (m, { conn, text, usedPrefix, command }) => {
-  if (!text) throw `*يرجى إدخال كود JavaScript للتنفيذ*\n\n*مثال*\n*${usedPrefix + command} console.log("Hello, world!");*`;
+  if (!text) throw `*يرجى إدخال كود C++ للتنفيذ*\n\n*مثال*\n*${usedPrefix + command} #include <iostream>\nint main() { std::cout << "Hello, world!"; return 0; }*`;
 
   const code = text.trim();
 
   try {
     m.reply('*جاري تنفيذ الكود، يرجى الانتظار...*');
 
-    const output = await runJsCode(code);
+    const output = await runCppCode(code);
 
     if (output) {
       m.reply(`✅ تم تنفيذ الكود بنجاح\n\nالناتج:\n${output}`);
@@ -21,22 +21,28 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
   }
 };
 
-async function runJsCode(code) {
+async function runCppCode(code) {
   try {
-    const response = await axios.post('https://runkit.com/api/1.0/endpoint', {
-      code: code
+    const response = await axios.post('https://wandbox.org/api/compile.json', {
+      compiler: 'gcc-head',
+      code: code,
+      options: 'warning,gnu++1z',
+      stdin: ''
     }, {
       headers: {
         'Content-Type': 'application/json'
       }
     });
 
+    // Logging the full response from API
+    console.log('Full API Response:', response.data);
+
     const data = response.data;
 
-    if (data.result) {
-      return data.result || 'No output';
+    if (data.program_message) {
+      return data.program_message || 'No output';
     } else {
-      return `Error: ${data.error || 'Unknown error'}`;
+      return `Error: ${data.compiler_error || 'Unknown error'}`;
     }
   } catch (error) {
     console.error('Error during API call:', error);
@@ -44,8 +50,8 @@ async function runJsCode(code) {
   }
 }
 
-handler.help = ['js'];
+handler.help = ['c++'];
 handler.tags = ['owner'];
 handler.owner = true;
-handler.command = ['js'];
+handler.command = ['c++'];
 export default handler;
